@@ -1,6 +1,6 @@
--- ESP Always-On Script
-local ESP_ENABLED = false -- ESP starts OFF but will be forced ON
-local ESP_COLOR = Color3.fromRGB(255, 0, 0) -- Red ESP color
+-- ESP Toggleable Script (Disable and Re-enable every 1 second)
+local ESP_ENABLED = false -- Initial state (ESP is OFF)
+local ESP_COLOR = Color3.fromRGB(255, 0, 0) -- Red color for ESP
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -39,39 +39,47 @@ local function createESP(player)
     player.CharacterAdded:Connect(applyESP)
 end
 
+-- Function to disable ESP
+local function disableESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            for _, part in ipairs(player.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    local box = part:FindFirstChild("ESPBox")
+                    if box then box:Destroy() end
+                end
+            end
+        end
+    end
+    print("[ESP] Disabled")
+end
+
 -- Function to enable ESP
 local function enableESP()
-    if not ESP_ENABLED then
-        ESP_ENABLED = true
-        for _, player in ipairs(Players:GetPlayers()) do
-            createESP(player)
-        end
-        print("[ESP] Enabled")
+    for _, player in ipairs(Players:GetPlayers()) do
+        createESP(player)
     end
+    print("[ESP] Enabled")
 end
 
 -- Detect new players joining
 Players.PlayerAdded:Connect(createESP)
 
--- Ensure ESP re-applies after respawn
-LocalPlayer.CharacterAdded:Connect(function()
-    wait(1) -- Small delay for character loading
-    enableESP()
-end)
-
--- Force ESP ON every second by directly enabling ESP
+-- Disable and Re-enable ESP every second
 task.spawn(function()
     while true do
-        wait(1) -- Every 1 second
-        enableESP()  -- Keep ESP on
+        wait(1)  -- Every 1 second
+        disableESP()  -- Disable ESP
+        wait(1)  -- Wait for 1 second before re-enabling
+        enableESP()  -- Re-enable ESP
     end
 end)
 
--- Toggle ESP with UI Button (Only turns ON)
+-- Toggle ESP with UI Button (Only turns ON when clicked)
 ESPButton.MouseButton1Click:Connect(function()
     enableESP()
     ESPButton.Text = "👁️ ESP: ON"
     ESPButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 end)
 
-print("[ESP Script] ESP is forced ON every second")
+print("[ESP Script] ESP will be disabled and re-enabled every second")
