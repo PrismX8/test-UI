@@ -3,7 +3,6 @@ local ESP_ENABLED = false -- ESP starts OFF but will be forced ON
 local ESP_COLOR = Color3.fromRGB(255, 0, 0) -- Red ESP color
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 -- UI Button (Assumes ESPButton exists in UI)
@@ -60,12 +59,11 @@ LocalPlayer.CharacterAdded:Connect(function()
     enableESP()
 end)
 
--- Force ESP ON every second by simulating 'E' key press
+-- Force ESP ON every second by directly enabling ESP
 task.spawn(function()
     while true do
         wait(1) -- Every 1 second
-        enableESP()
-        UserInputService.InputBegan:Fire(Enum.KeyCode.E) -- Fake 'E' press
+        enableESP()  -- Keep ESP on
     end
 end)
 
