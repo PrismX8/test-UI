@@ -1,10 +1,13 @@
-
 -- ESP Toggleable Script
 local ESP_ENABLED = false  -- Initial state (ESP is OFF)
 local ESP_COLOR = Color3.fromRGB(255, 0, 0) -- Red color for ESP
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
+
+-- UI Button (Assumes ESPButton exists in UI)
+local ESPButton = script.Parent -- Adjust this if needed
 
 -- Function to create ESP for a character
 local function createESP(player)
@@ -37,39 +40,63 @@ local function createESP(player)
     player.CharacterAdded:Connect(applyESP)
 end
 
--- Function to toggle ESP
+-- Function to enable ESP
+local function enableESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        createESP(player)
+    end
+    print("[ESP] Enabled")
+end
+
+-- Function to disable ESP
+local function disableESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            for _, part in ipairs(player.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    local box = part:FindFirstChild("ESPBox")
+                    if box then box:Destroy() end
+                end
+            end
+        end
+    end
+    print("[ESP] Disabled")
+end
+
+-- Toggle ESP function
 local function toggleESP()
     ESP_ENABLED = not ESP_ENABLED
 
     if ESP_ENABLED then
-        for _, player in ipairs(Players:GetPlayers()) do
-            createESP(player)
-        end
-        print("[ESP] Enabled")
+        enableESP()
     else
-        -- Remove all ESP boxes
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Character then
-                for _, part in ipairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        local box = part:FindFirstChild("ESPBox")
-                        if box then box:Destroy() end
-                    end
-                end
-            end
-        end
-        print("[ESP] Disabled")
+        disableESP()
     end
+
+    -- Update UI Button
+    ESPButton.Text = ESP_ENABLED and "👁️ ESP: ON" or "👁️ ESP: OFF"
+    ESPButton.BackgroundColor3 = ESP_ENABLED and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(50, 50, 50)
 end
 
 -- Detect new players joining
 Players.PlayerAdded:Connect(createESP)
 
--- Keybind to toggle ESP (Change "E" to your preferred key)
-game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
+-- Toggle ESP with 'E' key
+UserInputService.InputBegan:Connect(function(input, processed)
     if not processed and input.KeyCode == Enum.KeyCode.E then
         toggleESP()
     end
 end)
 
-print("[ESP Script] Press 'E' to toggle ESP")
+-- Toggle ESP with UI Button
+ESPButton.MouseButton1Click:Connect(toggleESP)
+
+-- Ensure ESP re-applies after respawn
+LocalPlayer.CharacterAdded:Connect(function()
+    wait(1) -- Small delay for character loading
+    if ESP_ENABLED then
+        enableESP()
+    end
+end)
+
+print("[ESP Script] Press 'E' or Click Button to toggle ESP")
